@@ -157,7 +157,8 @@ int match_user(unsigned char *user, unsigned char * password){
 	// STEP 2: Use the find_user function to obtain a node to the linked list 
 	// If the node returned by find_user is null that means the user does not exist
 	// In which case print the error message "Error: User does not exist\n" and return ERROR  
-    LLEntry *lookedup_user = malloc(sizeof(lookedup_user));
+    /*LLEntry *lookedup_user = malloc(sizeof(lookedup_user));*/
+    LLEntry *lookedup_user;
     lookedup_user = find_user(user);
     if (lookedup_user == NULL) {
         fprintf(stderr, "Error: User does not exist\n");
@@ -167,7 +168,7 @@ int match_user(unsigned char *user, unsigned char * password){
 	//STEP 3: Based on the stored salt and entered password calculate a hashed password and then check whether the calculated 
 	//hashed password matches with the stored one
 	//If the password does not match print the error message "Error: User password does not match\n" and return ERROR 
-    unsigned char candidate_hash[SHA512_DIGEST_LENGTH];
+    unsigned char candidate_hash[HASH_LEN];
     get_password_hash(candidate_hash, password, lookedup_user->salt);
 
     reti = binary_compare(candidate_hash, HASHED_PASSWORD_SIZE, lookedup_user->hashed_password, HASHED_PASSWORD_SIZE);
@@ -177,7 +178,7 @@ int match_user(unsigned char *user, unsigned char * password){
     printf("Returning: %d\n", reti);
 #endif
 
-    free(lookedup_user);
+    /*free(lookedup_user);*/
 
     if (reti != OKAY) {
         printf("Error: User password does not match\n");
@@ -209,7 +210,8 @@ int change_user_password(unsigned char *user, unsigned char * password_current, 
 	// STEP 2: Use the find_user function to obtain a node to the linked list 
 	// If the node returned by find_user is null that means the user does not exist
 	// In which case print the error message "Error: User does not exist\n" and return ERROR  
-    LLEntry *lookedup_user = malloc(sizeof(lookedup_user));
+    /*LLEntry *lookedup_user = malloc(sizeof(lookedup_user));*/
+    LLEntry *lookedup_user;
     lookedup_user = find_user(user);
     if (lookedup_user == NULL) {
         fprintf(stderr, "Error: User does not exist\n");
@@ -219,7 +221,7 @@ int change_user_password(unsigned char *user, unsigned char * password_current, 
 	//STEP 3: Based on the stored salt and entered password calculate a hashed password and then check whether the calculated 
 	//hashed password matches with the stored one
 	//If the password does not match print the error message "Error: User password does not match\n" and return ERROR 
-    unsigned char candidate_hash[SHA512_DIGEST_LENGTH];
+    unsigned char candidate_hash[HASH_LEN];
     get_password_hash(candidate_hash, password_current, lookedup_user->salt);
 
     reti = binary_compare(candidate_hash, HASHED_PASSWORD_SIZE, password_current, HASHED_PASSWORD_SIZE);
@@ -234,7 +236,7 @@ int change_user_password(unsigned char *user, unsigned char * password_current, 
 
 	// the password entry for the function 
 
-    free(lookedup_user);
+    /*free(lookedup_user);*/
         printf("DEBUG: Called change_user_password function\n");
         return OKAY ;
 }
