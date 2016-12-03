@@ -122,16 +122,50 @@ int delete_user(unsigned char *user, unsigned char * password){
         //Returns OKAY or ERROR
 
 	// STEP 1: use the functions username_okay and password_okay to check whether the username and password respect the constraints 
+    int reti = username_okay(user); 
+    if (reti != OKAY) {
+        return reti;
+    }
+
+    reti = password_okay(password); 
+    if (reti != OKAY) {
+        return reti;
+    }
 
 	// STEP 2: Use the find_user function to obtain a node to the linked list 
 	// If the node returned by find_user is null that means the user does not exist
 	// In which case print the error message "Error: User does not exist\n" and return ERROR  
 	
+    LLEntry *lookedup_user;
+    lookedup_user = find_user(user);
+    if (lookedup_user == NULL) {
+        fprintf(stderr, "Error: User does not exist\n");
+        return ERROR;
+    }
 	//STEP 3: Based on the stored salt and entered password calculate a hashed password and then check whether the calculated 
 	//hashed password matches with the stored one
 	//If the password does not match print the error message "Error: User password does not match\n" and return ERROR 
+    unsigned char candidate_hash[HASH_LEN];
+    get_password_hash(candidate_hash, password, lookedup_user->salt);
 
+    reti = binary_compare(candidate_hash, HASHED_PASSWORD_SIZE, lookedup_user->hashed_password, HASHED_PASSWORD_SIZE);
+
+#ifdef DEBUG
+    printf("Hash: %s\n", candidate_hash);
+    printf("Returning: %d\n", reti);
+#endif
+
+    /*free(lookedup_user);*/
+
+    if (reti != OKAY) {
+        printf("Error: User password does not match\n");
+#ifdef DEBUG
+        puts("match_user");
+#endif
+        return ERROR;
+    }
 	//STEP 4: Then call the delete_node with the user name to delete the user entry 
+    delete_node(user);
 
         printf("DEBUG: Called delete_user function\n");
         return OKAY ;
