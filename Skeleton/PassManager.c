@@ -7,78 +7,7 @@
 # include <assert.h> 
 # include "util.h" 
 
-/*
-#include <regex.h>
-#include "input_okay.h"
-*/
-
-/*
-int password_okay(char* s) {
-
-    regex_t regex;
-    int reti;
-
-    reti = regcomp(&regex, "^[0-9a-zA-Z@#$%&*()]*$", 0);
-
-    if (reti) {
-        fprintf(stderr, "Could not compile regex\n");
-        exit(EXIT_FAILURE);
-    } 
-
-    reti = regexec(&regex, s, 0, NULL, 0); 
-    if (!reti) {
-        return OKAY;
-
-    } else if (reti == REG_NOMATCH) {
-        return INVALID_CHARACTER;
-
-    } else {
-        regerror(reti, &regex, s, sizeof(s));
-        fprintf(stderr, "Regex match failed: %s\n", s);
-        regfree(&regex);
-        exit(1);
-    }
-    regfree(&regex);
-}
-
-int username_okay(char* s) {
-
-    int len_s = strlen(s);
-    if (len_s < MIN_LEN_USERNAME) {
-        return TOO_SHORT;
-
-    } else if (len_s > MAX_LEN_USERNAME) {
-        return TOO_LONG;
-    }
-
-    regex_t regex;
-    int reti;
-
-    reti = regcomp(&regex, "^[0-9a-zA-Z]*$", 0);
-
-    if (reti) {
-        fprintf(stderr, "Could not compile regex\n");
-        exit(EXIT_FAILURE);
-    } 
-
-    reti = regexec(&regex, s, 0, NULL, 0); 
-    if (!reti) {
-        return OKAY;
-
-    } else if (reti == REG_NOMATCH) {
-        return INVALID_CHARACTER;
-
-    } else {
-        regerror(reti, &regex, s, sizeof(s));
-        fprintf(stderr, "Regex match failed: %s\n", s);
-        regfree(&regex);
-        exit(1);
-    }
-    regfree(&regex);
-}
-*/
-
-//LLEntry * head ; 
+const int HASH_LEN = (SHA512_DIGEST_LENGTH*2+1);
 
 char pFile[1024] ; 
 
@@ -115,7 +44,29 @@ CHARACTERS FROM THE CLASSES OF CHARACTERS ALLOWED. CONSULT THE PROJECT DESCRIPTI
 TO FIND THE VALID CHARACTER CLASSES. 
 */
 
+void get_password_hash(unsigned char* dst, const unsigned char* password, unsigned char* salt) {
 
+    unsigned char digest[SHA512_DIGEST_LENGTH]; 
+    SHA512_CTX ctx;
+    SHA512_Init(&ctx);
+    SHA512_Update(&ctx, password, strlen(password));
+    assert(getRandBytes(salt, 32) != -1 ) ; 
+    SHA512_Update(&ctx, salt, 32);
+    SHA512_Final(digest, &ctx);
+
+    /*binary_copy(dst, digest, SHA512_DIGEST_LENGTH);*/
+    for (int i = 0; i < SHA512_DIGEST_LENGTH; i++) {
+        sprintf(&dst[i*2], "%02x", (unsigned int)digest[i]);
+    }
+
+#ifdef DEBUG
+    /*printf("SHA512 hash value: %s\n", mdString);*/
+    printf("password: %s\n", password);
+    printf("salt    : %s\n", salt);
+    printf("SHA512 hash value: %s\n", dst);
+    printf("LEN: %d\n",SHA512_DIGEST_LENGTH); 
+#endif
+}
 
 int register_user(unsigned char *user, unsigned char *password){
 	printf("Registering user %s\n",user); 
@@ -149,18 +100,8 @@ int register_user(unsigned char *user, unsigned char *password){
     getRandBytes(salt, SALT_SIZE);
 		
 	//STEP 4: Generate the hashed password based on password and the salt 
-    unsigned char digest[SHA512_DIGEST_LENGTH]; 
-    SHA512_CTX ctx;
-    SHA512_Init(&ctx);
-    SHA512_Update(&ctx, password, strlen(password));
-    assert(getRandBytes(salt, 32) != -1 ) ; 
-    SHA512_Update(&ctx, salt, 32);
-    SHA512_Final(digest, &ctx);
-
-    char mdString[SHA512_DIGEST_LENGTH*2+1];
-    for (int i = 0; i < SHA512_DIGEST_LENGTH; i++) {
-        sprintf(&mdString[i*2], "%02x", (unsigned int)digest[i]);
-    }
+    char mdString[HASH_LEN];
+    get_password_hash(mdString, password, salt);
 
 #ifdef DEBUG
     printf("SHA512 hash value: %s\n", mdString);
@@ -169,8 +110,9 @@ int register_user(unsigned char *user, unsigned char *password){
 
 	//STEP 5: Call the push_back function to add the user to the list 
     push_back(user, salt, mdString);
-        printf("DEBUG: Called register_user function\n");
-        return OKAY ;
+
+    printf("DEBUG: Called register_user function\n");
+    return OKAY ;
 }
 
 
@@ -202,18 +144,51 @@ int match_user(unsigned char *user, unsigned char * password){
         //Returns OKAY or ERROR
 
 	// STEP 1: use the functions username_okay and password_okay to check whether the username and password respect the constraints 
+    int reti = username_okay(user); 
+    if (reti != OKAY) {
+        return reti;
+    }
+
+    reti = password_okay(password); 
+    if (reti != OKAY) {
+        return reti;
+    } 
 
 	// STEP 2: Use the find_user function to obtain a node to the linked list 
 	// If the node returned by find_user is null that means the user does not exist
 	// In which case print the error message "Error: User does not exist\n" and return ERROR  
+    LLEntry *lookedup_user = malloc(sizeof(lookedup_user));
+    lookedup_user = find_user(user);
+    if (lookedup_user == NULL) {
+        fprintf(stderr, "Error: User does not exist\n");
+        return ERROR;
+    }
 
 	//STEP 3: Based on the stored salt and entered password calculate a hashed password and then check whether the calculated 
 	//hashed password matches with the stored one
 	//If the password does not match print the error message "Error: User password does not match\n" and return ERROR 
+    unsigned char candidate_hash[SHA512_DIGEST_LENGTH];
+    get_password_hash(candidate_hash, password, lookedup_user->salt);
 
+    reti = binary_compare(candidate_hash, HASHED_PASSWORD_SIZE, lookedup_user->hashed_password, HASHED_PASSWORD_SIZE);
 
+#ifdef DEBUG
+    printf("Hash: %s\n", candidate_hash);
+    printf("Returning: %d\n", reti);
+#endif
+
+    free(lookedup_user);
+
+    if (reti != OKAY) {
+        printf("Error: User password does not match\n");
+#ifdef DEBUG
+        puts("match_user");
+#endif
+        return ERROR;
+    }
         printf("DEBUG: Called login function\n");
-        return OKAY ;
+        /*return OKAY ;*/
+    return OKAY;
 }
 
 int change_user_password(unsigned char *user, unsigned char * password_current, unsigned char * password_new){
@@ -221,18 +196,45 @@ int change_user_password(unsigned char *user, unsigned char * password_current, 
         //Returns OKAY or ERROR
 
 	// STEP 1: use the functions username_okay and password_okay to check whether the username and password respect the constraints 
+    int reti = username_okay(user); 
+    if (reti != OKAY) {
+        return reti;
+    }
+
+    reti = password_okay(password_current); 
+    if (reti != OKAY) {
+        return reti;
+    } 
 
 	// STEP 2: Use the find_user function to obtain a node to the linked list 
 	// If the node returned by find_user is null that means the user does not exist
 	// In which case print the error message "Error: User does not exist\n" and return ERROR  
+    LLEntry *lookedup_user = malloc(sizeof(lookedup_user));
+    lookedup_user = find_user(user);
+    if (lookedup_user == NULL) {
+        fprintf(stderr, "Error: User does not exist\n");
+        return ERROR;
+    }
 
 	//STEP 3: Based on the stored salt and entered password calculate a hashed password and then check whether the calculated 
 	//hashed password matches with the stored one
 	//If the password does not match print the error message "Error: User password does not match\n" and return ERROR 
+    unsigned char candidate_hash[SHA512_DIGEST_LENGTH];
+    get_password_hash(candidate_hash, password_current, lookedup_user->salt);
 
+    reti = binary_compare(candidate_hash, HASHED_PASSWORD_SIZE, password_current, HASHED_PASSWORD_SIZE);
+    if (reti != OKAY) {
+        fprintf(stderr, "Error: User password does not match\n");
+        return ERROR;
+    }
 	// STEP 4: Create a new random salt for the new password and obtain the hashed password then call the update_user_password function to update 
+    unsigned char salt[SALT_SIZE];
+    getRandBytes(salt, SALT_SIZE);
+    update_user_password(user, salt, candidate_hash);
+
 	// the password entry for the function 
 
+    free(lookedup_user);
         printf("DEBUG: Called change_user_password function\n");
         return OKAY ;
 }
