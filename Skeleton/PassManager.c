@@ -44,7 +44,7 @@ CHARACTERS FROM THE CLASSES OF CHARACTERS ALLOWED. CONSULT THE PROJECT DESCRIPTI
 TO FIND THE VALID CHARACTER CLASSES. 
 */
 
-void get_password_hash(unsigned char* dst, const unsigned char* password, unsigned char* salt) {
+void get_password_hash(unsigned char* dst, const unsigned char* password, const unsigned char* salt) {
 
     unsigned char digest[SHA512_DIGEST_LENGTH]; 
     SHA512_CTX ctx;
@@ -55,7 +55,8 @@ void get_password_hash(unsigned char* dst, const unsigned char* password, unsign
 
     /*binary_copy(dst, digest, SHA512_DIGEST_LENGTH);*/
     for (int i = 0; i < SHA512_DIGEST_LENGTH; i++) {
-        sprintf(&dst[i*2], "%02x", (unsigned int)digest[i]);
+        /*sprintf(&dst[i*2], "%02x", (unsigned int)digest[i]);*/
+        binary_copy(dst, digest, SHA512_DIGEST_LENGTH);
     }
 
 #ifdef DEBUG
