@@ -1,0 +1,50 @@
+OPTION: 1
+SELECTED OPERATION: <REGISTER USER ACCOUNT>
+Enter username: testuser3
+Enter password: qwerasdfzxcv
+Registering user testuser3
+password: qwerasdfzxcv
+
+/* Look here */
+-> salt    : \�w��R'���(�{�lr9�&�)���Q0��\�62342ffa26d168ac1e59e40faa36387a389e387968044f2ea2ba0441c90f4ee38d95f6465a16823c622ad35852dd7bdf235460c2234941202c2adcf12476b98a
+
+SHA512 hash value: 62342ffa26d168ac1e59e40faa36387a389e387968044f2ea2ba0441c90f4ee38d95f6465a16823c622ad35852dd7bdf235460c2234941202c2adcf12476b98a
+LEN: 64
+SHA512 hash value: 62342ffa26d168ac1e59e40faa36387a389e387968044f2ea2ba0441c90f4ee38d95f6465a16823c622ad35852dd7bdf235460c2234941202c2adcf12476b98a
+LEN: 64
+DEBUG: Called register_user function
+STATUS: Writing to password file
+STATUS: Finished writing to password file
+
+
+
+Select an integer from 1-5
+The integer option maps to the following commands:
+(1) register a user account
+(2) delete a user account
+(3) user login
+(4) change an account password
+(5) quit console
+
+
+OPTION: 3
+SELECTED OPERATION: <USER LOGIN>
+Enter username: testuser3
+Enter password: qwerasdfzxcv
+password: qwerasdfzxcv
+
+/* Look here */
+-> salt    : �!�3����j�B��ZvK��I�X�@����62342ffa26d168ac1e59e40faa36387a389e387968044f2ea2ba0441c90f4ee35336334
+
+SHA512 hash value: c1cb0c357edb66f8973906c379708ac61fc0149fa24008762c2bc04f4bf2214888e461b9d941d3441f3ef6405fcaecd2b9071ac2393e5615e11db577968d7ee0
+LEN: 64
+Hash: c1cb0c357edb66f8973906c379708ac61fc0149fa24008762c2bc04f4bf2214888e461b9d941d3441f3ef6405fcaecd2b9071ac2393e5615e11db577968d7ee0
+Returning: -1
+Error: User password does not match
+match_user
+__________________________
+|                         |
+| USER LOGIN UNSUCCESSFUL |
+|_________________________|
+
+

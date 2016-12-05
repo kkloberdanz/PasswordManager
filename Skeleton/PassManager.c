@@ -50,7 +50,6 @@ void get_password_hash(unsigned char* dst, const unsigned char* password, unsign
     SHA512_CTX ctx;
     SHA512_Init(&ctx);
     SHA512_Update(&ctx, password, strlen(password));
-    assert(getRandBytes(salt, 32) != -1 ) ; 
     SHA512_Update(&ctx, salt, 32);
     SHA512_Final(digest, &ctx);
 
