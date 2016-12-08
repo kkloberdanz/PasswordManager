@@ -230,7 +230,7 @@ int change_user_password(unsigned char *user, unsigned char * password_current, 
         //write the body
         //Returns OKAY or ERROR
 
-	// STEP 1: use the functions username_okay and password_okay to check whether the username and password respect the constraints 
+    // STEP 1: use the functions username_okay and password_okay to check whether the username and password respect the constraints 
     int reti = username_okay(user); 
     if (reti != OKAY) {
         return reti;
@@ -241,9 +241,9 @@ int change_user_password(unsigned char *user, unsigned char * password_current, 
         return reti;
     } 
 
-	// STEP 2: Use the find_user function to obtain a node to the linked list 
-	// If the node returned by find_user is null that means the user does not exist
-	// In which case print the error message "Error: User does not exist\n" and return ERROR  
+    // STEP 2: Use the find_user function to obtain a node to the linked list 
+    // If the node returned by find_user is null that means the user does not exist
+    // In which case print the error message "Error: User does not exist\n" and return ERROR  
     /*LLEntry *lookedup_user = malloc(sizeof(lookedup_user));*/
     LLEntry *lookedup_user;
     lookedup_user = find_user(user);
@@ -252,21 +252,27 @@ int change_user_password(unsigned char *user, unsigned char * password_current, 
         return ERROR;
     }
 
-	//STEP 3: Based on the stored salt and entered password calculate a hashed password and then check whether the calculated 
-	//hashed password matches with the stored one
-	//If the password does not match print the error message "Error: User password does not match\n" and return ERROR 
+    //STEP 3: Based on the stored salt and entered password calculate a hashed password and then check whether the calculated 
+    //hashed password matches with the stored one
+    //If the password does not match print the error message "Error: User password does not match\n" and return ERROR 
     unsigned char candidate_hash[HASH_LEN];
     get_password_hash(candidate_hash, password_current, lookedup_user->salt);
-
-    reti = binary_compare(candidate_hash, HASHED_PASSWORD_SIZE, password_current, HASHED_PASSWORD_SIZE);
+    reti = binary_compare(candidate_hash, HASHED_PASSWORD_SIZE, lookedup_user->hashed_password, HASHED_PASSWORD_SIZE);
+    //reti = binary_compare(candidate_hash, HASHED_PASSWORD_SIZE, password_current, HASHED_PASSWORD_SIZE);
     if (reti != OKAY) {
         fprintf(stderr, "Error: User password does not match\n");
         return ERROR;
     }
-	// STEP 4: Create a new random salt for the new password and obtain the hashed password then call the update_user_password function to update 
+
+
+    // STEP 4: Create a new random salt for the new password and obtain the hashed password then call the update_user_password function to update
     unsigned char salt[SALT_SIZE];
     getRandBytes(salt, SALT_SIZE);
-    update_user_password(user, salt, candidate_hash);
+    
+    unsigned char new_hash[HASH_LEN];
+    get_password_hash(new_hash, password_new, salt);
+
+    update_user_password(user, salt, new_hash);
 
 	// the password entry for the function 
 
